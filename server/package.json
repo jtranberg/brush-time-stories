@@ -12,7 +12,6 @@
     "express": "^5.1.0",
     "multer": "^2.0.0",
     "openai": "^7.4.0",
-    "pdf-poppler": "^0.2.3",
     "pdfjs-dist": "^6.2.108"
   },
   "devDependencies": {
