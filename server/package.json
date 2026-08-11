@@ -1,0 +1,21 @@
+{
+  "name": "brushtime-upload-service",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^5.1.0",
+    "multer": "^2.0.0",
+    "openai": "^7.4.0",
+    "pdf-poppler": "^0.2.3",
+    "pdfjs-dist": "^6.2.108"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
