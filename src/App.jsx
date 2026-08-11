@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import StoryUpload from "./components/StoryUpload";
 import "./App.css";
 
-const API_URL = "http://localhost:5050";
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5050";
 
 /* =========================================================
    HELPERS
@@ -27,6 +28,7 @@ function getAssetUrl(assetPath) {
   return `${API_URL}${assetPath}`;
 }
 
+
 /* =========================================================
    APP
    ========================================================= */
@@ -42,6 +44,7 @@ function App() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const timerRef = useRef(null);
+  const voicesRef = useRef([]);
 
   const currentPage = selectedStory?.pages?.[currentPageIndex] || null;
 
@@ -72,6 +75,27 @@ function App() {
       setLoadingStories(false);
     }
   }, []);
+
+  useEffect(() => {
+  const loadVoices = () => {
+    voicesRef.current =
+      window.speechSynthesis.getVoices();
+  };
+
+  loadVoices();
+
+  window.speechSynthesis.addEventListener(
+    "voiceschanged",
+    loadVoices,
+  );
+
+  return () => {
+    window.speechSynthesis.removeEventListener(
+      "voiceschanged",
+      loadVoices,
+    );
+  };
+}, []);
 
   /*
    * Initial story load.
@@ -149,31 +173,42 @@ function App() {
     setIsPlaying(false);
   }
 
- function speakPage(pageIndex) {
-  if (!selectedStory) {
-    return;
-  }
+  function speakPage(pageIndex) {
+    if (!selectedStory) {
+      return;
+    }
 
-  const page = selectedStory.pages?.[pageIndex];
+    const page = selectedStory.pages?.[pageIndex];
 
-  if (!page?.text?.trim()) {
-    setIsPlaying(false);
-    return;
-  }
+    if (!page?.text?.trim()) {
+      setIsPlaying(false);
+      return;
+    }
 
-  const pageParts = page.text.match(
-    /^(.*?)\bpage\s+\d+\b(.*)$/is,
-  );
+    const pageParts = page.text.match(/^(.*?)\bpage\s+\d+\b(.*)$/is);
 
-  let title = "";
-  let body = "";
+    let title = "";
+    let body = "";
 
-  if (pageParts) {
-    title = pageParts[1].trim();
-    body = pageParts[2].trim();
-  } else {
-    body = page.text.trim();
-  }
+    if (pageParts) {
+      title = pageParts[1].trim();
+      body = pageParts[2].trim();
+    } else {
+      body = page.text.trim();
+    }
+
+    const preferredVoice =
+  voicesRef.current.find(
+    (voice) =>
+      voice.lang.startsWith("en") &&
+      /female|samantha|zira|aria|jenny|ava/i.test(
+        voice.name,
+      ),
+  ) ||
+  voicesRef.current.find((voice) =>
+    voice.lang.startsWith("en"),
+  ) ||
+  null;
 
     const finishPage = () => {
       const nextPageIndex = pageIndex + 1;
@@ -198,8 +233,12 @@ function App() {
 
       const bodyUtterance = new SpeechSynthesisUtterance(body);
 
-      bodyUtterance.rate = 0.95;
-      bodyUtterance.pitch = 1;
+      if (preferredVoice) {
+        bodyUtterance.voice = preferredVoice;
+      }
+
+      bodyUtterance.rate = 0.9;
+      bodyUtterance.pitch = 1.05;
       bodyUtterance.volume = 1;
 
       bodyUtterance.onend = finishPage;
@@ -214,8 +253,12 @@ function App() {
 
     const titleUtterance = new SpeechSynthesisUtterance(title);
 
-    titleUtterance.rate = 0.95;
-    titleUtterance.pitch = 1;
+    if (preferredVoice) {
+      titleUtterance.voice = preferredVoice;
+    }
+
+    titleUtterance.rate = 0.9;
+    titleUtterance.pitch = 1.05;
     titleUtterance.volume = 1;
 
     titleUtterance.onend = () => {
