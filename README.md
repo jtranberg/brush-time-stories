@@ -1,16 +1,176 @@
-# React + Vite
+# BrushTime Stories
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+BrushTime Stories is a narrated story platform designed to make brushing time more engaging for children.
 
-Currently, two official plugins are available:
+Parents or publishers can upload a finished PDF story. BrushTime processes each PDF into page images, extracts the page text, and presents the story in a simple narrated reader with automatic page progression.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Live Application
 
-## React Compiler
+Frontend:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+https://brush-time-stories.netlify.app
 
-## Expanding the ESLint configuration
+Backend API:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+https://brush-time-stories.onrender.com
+
+---
+
+## Features
+
+- PDF story upload
+- Automatic PDF page rendering
+- PDF text extraction
+- Story library
+- Narrated story playback
+- Natural browser-based speech voice
+- Title and narration pacing
+- Automatic page advancement
+- Previous / Next page controls
+- Pause and restart controls
+- Story progress timer
+- Responsive React interface
+- Production frontend on Netlify
+- Production API on Render
+
+---
+
+## Technology
+
+### Frontend
+
+- React
+- Vite
+- JavaScript
+- CSS
+- Web Speech API
+
+### Backend
+
+- Node.js
+- Express
+- Multer
+- PDF.js (`pdfjs-dist`)
+- File-based story manifests
+
+### Deployment
+
+- Netlify — frontend
+- Render — backend API
+
+---
+
+## Architecture
+
+```text
+PDF Upload
+    ↓
+React Frontend
+    ↓
+Express Upload API
+    ↓
+PDF.js
+    ├── Render pages to PNG
+    └── Extract page text
+    ↓
+Story Manifest
+    ↓
+Story Library
+    ↓
+Web Speech Narration
+    ↓
+Automatic Page Progression
+Local Development
+Backend
+cd server
+npm install
+npm run dev
+
+The backend runs by default at:
+
+http://localhost:5050
+Frontend
+
+From the project root:
+
+npm install
+npm run dev
+
+The frontend normally runs at:
+
+http://localhost:5173
+Environment Variables
+
+Create a .env file in the frontend project:
+
+VITE_API_URL=http://localhost:5050
+
+For production, Netlify uses:
+
+VITE_API_URL=https://brush-time-stories.onrender.com
+
+Environment files should not be committed to Git.
+
+Story Processing
+
+When a PDF is uploaded, BrushTime:
+
+Saves the uploaded PDF.
+Creates a unique story identifier.
+Renders every PDF page into a PNG image.
+Extracts text from each page.
+Associates the image and narration text.
+Generates a story.json manifest.
+Adds the story to the story library.
+Makes the story available for narrated playback.
+Narration
+
+BrushTime uses the browser Web Speech API for narration.
+
+The player:
+
+Removes printed page numbers from narration.
+Separates the page title from the body text.
+Adds a deliberate pause after the title.
+Selects a preferred English system voice when available.
+Automatically advances to the next page when narration finishes.
+
+Available voices depend on the user's operating system and browser.
+
+Current Status
+
+BrushTime Stories is in active prototype development.
+
+Current production functionality includes:
+
+PDF upload
+PDF-to-image processing
+Text extraction
+Story library
+Narrated playback
+Automatic page progression
+Production deployment
+Planned Improvements
+Three-minute story pacing
+Duplicate story handling
+Story deletion / management
+Additional narration controls
+Expanded story metadata
+Persistent production storage
+Publisher / administrator tools
+Production Notes
+
+The backend originally used pdf-poppler for PDF image conversion.
+
+That dependency was replaced with PDF.js because pdf-poppler does not support the Linux environment used by Render.
+
+BrushTime now uses a cross-platform PDF rendering pipeline suitable for local Windows development and Linux production deployment.
+
+BrushTime Stories
+
+Brush. Listen. Smile.
+
+
+That README now actually tells someone **what you built, how it works, why PDF.js is there, how production is wired, and where the project is heading**.
+
+And I’d definitely include **duplicate handling** and **persistent production storage** in Planned Improvements — those six copies of Toby just revealed our next two real product requirements. 😄
