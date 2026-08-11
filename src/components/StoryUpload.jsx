@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5050";
+
 function StoryUpload({ onUploadComplete }) {
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState("");
@@ -21,13 +23,10 @@ function StoryUpload({ onUploadComplete }) {
       setUploading(true);
       setStatus("Uploading story...");
 
-      const response = await fetch(
-        "http://localhost:5050/api/stories/upload",
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+      const response = await fetch(`${API_URL}/api/stories/upload`, {
+        method: "POST",
+        body: formData,
+      });
 
       const data = await response.json();
 
@@ -47,11 +46,7 @@ function StoryUpload({ onUploadComplete }) {
     } catch (error) {
       console.error(error);
 
-      setStatus(
-        error instanceof Error
-          ? error.message
-          : "Upload failed.",
-      );
+      setStatus(error instanceof Error ? error.message : "Upload failed.");
     } finally {
       setUploading(false);
     }
@@ -65,52 +60,35 @@ function StoryUpload({ onUploadComplete }) {
         <h2>Upload a new story.</h2>
 
         <p>
-          Drop in the finished PDF and BrushTime Stories will prepare it
-          for playback.
+          Drop in the finished PDF and BrushTime Stories will prepare it for
+          playback.
         </p>
       </div>
 
-      <form
-        className="upload-form"
-        onSubmit={handleSubmit}
-      >
+      <form className="upload-form" onSubmit={handleSubmit}>
         <label className="upload-dropzone">
           <span className="upload-title">
             {file ? file.name : "Choose story PDF"}
           </span>
 
-          <span className="upload-help">
-            PDF files up to 25 MB
-          </span>
+          <span className="upload-help">PDF files up to 25 MB</span>
 
           <input
             type="file"
             accept="application/pdf"
             onChange={(event) => {
-              setFile(
-                event.target.files?.[0] || null,
-              );
+              setFile(event.target.files?.[0] || null);
 
               setStatus("");
             }}
           />
         </label>
 
-        <button
-          className="primary-button"
-          type="submit"
-          disabled={uploading}
-        >
-          {uploading
-            ? "Uploading..."
-            : "Upload Story"}
+        <button className="primary-button" type="submit" disabled={uploading}>
+          {uploading ? "Uploading..." : "Upload Story"}
         </button>
 
-        {status && (
-          <p className="upload-status">
-            {status}
-          </p>
-        )}
+        {status && <p className="upload-status">{status}</p>}
       </form>
     </section>
   );
