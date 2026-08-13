@@ -16,6 +16,7 @@ import Story from "./models/Story.js";
 import {
   GetObjectCommand,
   DeleteObjectCommand,
+  DeleteObjectsCommand,
   ListObjectsV2Command,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
@@ -441,6 +442,67 @@ app.post(
           }
         },
       );
+
+
+
+app.delete(
+  "/api/stories/:storyId",
+  async (req, res, next) => {
+    try {
+      const { storyId } = req.params;
+
+      const story = await Story.findOne({
+        storyId,
+      }).lean();
+
+      if (!story) {
+        return res.status(404).json({
+          success: false,
+          message: "Story not found.",
+        });
+      }
+
+      const prefix = `stories/${storyId}/`;
+
+      const listedObjects = await r2.send(
+        new ListObjectsV2Command({
+          Bucket: R2_BUCKET_NAME,
+          Prefix: prefix,
+        }),
+      );
+
+      const objects =
+        listedObjects.Contents?.map((item) => ({
+          Key: item.Key,
+        })) ?? [];
+
+      if (objects.length > 0) {
+        await r2.send(
+          new DeleteObjectsCommand({
+            Bucket: R2_BUCKET_NAME,
+            Delete: {
+              Objects: objects,
+              Quiet: true,
+            },
+          }),
+        );
+      }
+
+      await Story.deleteOne({
+        storyId,
+      });
+
+      return res.json({
+        success: true,
+        message: "Story deleted.",
+        storyId,
+        deletedR2Objects: objects.length,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 app.get("/api/stories", async (req, res, next) => {
   try {
