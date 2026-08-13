@@ -71,7 +71,7 @@ function StoryUpload({ onUploadComplete }) {
             {file ? file.name : "Choose story PDF"}
           </span>
 
-          <span className="upload-help">PDF files up to 25 MB</span>
+          <span className="upload-help">PDF files up to 100 MB</span>
 
           <input
             type="file"
