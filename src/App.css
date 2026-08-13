@@ -416,3 +416,30 @@ button {
     padding: 24px;
   }
 }
+/* =========================================================
+   STORY CARD ACTIONS
+   ========================================================= */
+
+.story-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.story-card-content > .primary-button,
+.story-card-content > .secondary-button {
+  width: 20%;
+}
+
+.story-card-content > .secondary-button {
+  margin-top: -0.4rem;
+  border-color: #d8b4b4;
+  color: #9f3a3a;
+  background: #f2a9a9;
+}
+
+.story-card-content > .secondary-button:hover {
+  background: #a60909;
+  border-color: #e68787;
+  color: #f3dbdb;
+}

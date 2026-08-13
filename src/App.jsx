@@ -2,8 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import StoryUpload from "./components/StoryUpload";
 import "./App.css";
 
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5050";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5050";
 
 /* =========================================================
    HELPERS
@@ -27,7 +26,6 @@ function getAssetUrl(assetPath) {
 
   return `${API_URL}${assetPath}`;
 }
-
 
 /* =========================================================
    APP
@@ -77,25 +75,18 @@ function App() {
   }, []);
 
   useEffect(() => {
-  const loadVoices = () => {
-    voicesRef.current =
-      window.speechSynthesis.getVoices();
-  };
+    const loadVoices = () => {
+      voicesRef.current = window.speechSynthesis.getVoices();
+    };
 
-  loadVoices();
+    loadVoices();
 
-  window.speechSynthesis.addEventListener(
-    "voiceschanged",
-    loadVoices,
-  );
+    window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
 
-  return () => {
-    window.speechSynthesis.removeEventListener(
-      "voiceschanged",
-      loadVoices,
-    );
-  };
-}, []);
+    return () => {
+      window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
+    };
+  }, []);
 
   /*
    * Initial story load.
@@ -331,6 +322,34 @@ function App() {
     setIsPlaying(false);
   }
 
+  async function handleDeleteStory(story) {
+    const confirmed = window.confirm(`Delete "${story.title}"?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/stories/${story.id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to delete story.");
+      }
+
+      setStories((currentStories) =>
+        currentStories.filter((item) => item.id !== story.id),
+      );
+    } catch (error) {
+      console.error("Unable to delete story:", error);
+
+      window.alert(error.message || "Unable to delete story.");
+    }
+  }
+
   /* =========================================================
      STORY PLAYER
      ========================================================= */
@@ -508,6 +527,14 @@ function App() {
                     onClick={() => startStory(story)}
                   >
                     Open Story
+                  </button>
+
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => handleDeleteStory(story)}
+                  >
+                    Delete Story
                   </button>
                 </div>
               </article>

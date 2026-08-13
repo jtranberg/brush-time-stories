@@ -292,8 +292,6 @@ app.post(
    UPLOAD STORY PAGE IMAGES TO R2
    ----------------------------------------------------- */
 
-  
-
       for (const page of storyPages) {
         const localImagePath = path.join(
           storyOutputDirectory,
@@ -390,125 +388,132 @@ app.post(
    GET STORY LIBRARY
    ========================================================= */
 
-       app.get(
-        "/api/stories/:storyId/pages/:pageId/image",
-        async (req, res, next) => {
-          try {
-            const { storyId, pageId } = req.params;
+app.get("/api/stories/:storyId/pages/:pageId/image", async (req, res, next) => {
+  try {
+    const { storyId, pageId } = req.params;
 
-            const story = await Story.findOne({
-              storyId,
-            }).lean();
+    const story = await Story.findOne({
+      storyId,
+    }).lean();
 
-            if (!story) {
-              return res.status(404).json({
-                success: false,
-                message: "Story not found.",
-              });
-            }
+    if (!story) {
+      return res.status(404).json({
+        success: false,
+        message: "Story not found.",
+      });
+    }
 
-            const page = story.pages.find(
-              (item) => String(item.id) === String(pageId),
-            );
+    const page = story.pages.find((item) => String(item.id) === String(pageId));
 
-            if (!page) {
-              return res.status(404).json({
-                success: false,
-                message: "Story page not found.",
-              });
-            }
+    if (!page) {
+      return res.status(404).json({
+        success: false,
+        message: "Story page not found.",
+      });
+    }
 
-            if (!page.r2Key) {
-              return res.status(404).json({
-                success: false,
-                message: "R2 image key is missing for this page.",
-              });
-            }
+    if (!page.r2Key) {
+      return res.status(404).json({
+        success: false,
+        message: "R2 image key is missing for this page.",
+      });
+    }
 
-            const result = await r2.send(
-              new GetObjectCommand({
-                Bucket: R2_BUCKET_NAME,
-                Key: page.r2Key,
-              }),
-            );
+    const result = await r2.send(
+      new GetObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: page.r2Key,
+      }),
+    );
 
-            res.setHeader("Content-Type", result.ContentType || "image/png");
+    res.setHeader("Content-Type", result.ContentType || "image/png");
 
-            res.setHeader("Cache-Control", "public, max-age=3600");
+    res.setHeader("Cache-Control", "public, max-age=3600");
 
-            result.Body.pipe(res);
-          } catch (error) {
-            next(error);
-          }
-        },
-      );
+    result.Body.pipe(res);
+  } catch (error) {
+    next(error);
+  }
+});
 
+app.delete("/api/stories/:storyId", async (req, res, next) => {
+  try {
+    const { storyId } = req.params;
 
+    const story = await Story.findOne({
+      storyId,
+    }).lean();
 
-app.delete(
-  "/api/stories/:storyId",
-  async (req, res, next) => {
-    try {
-      const { storyId } = req.params;
+    if (!story) {
+      return res.status(404).json({
+        success: false,
+        message: "Story not found.",
+      });
+    }
 
-      const story = await Story.findOne({
-        storyId,
-      }).lean();
+    const prefix = `stories/${storyId}/`;
 
-      if (!story) {
-        return res.status(404).json({
-          success: false,
-          message: "Story not found.",
-        });
-      }
+    const listedObjects = await r2.send(
+      new ListObjectsV2Command({
+        Bucket: R2_BUCKET_NAME,
+        Prefix: prefix,
+      }),
+    );
 
-      const prefix = `stories/${storyId}/`;
+    const objects =
+      listedObjects.Contents?.map((item) => ({
+        Key: item.Key,
+      })) ?? [];
 
-      const listedObjects = await r2.send(
-        new ListObjectsV2Command({
+    if (objects.length > 0) {
+      await r2.send(
+        new DeleteObjectsCommand({
           Bucket: R2_BUCKET_NAME,
-          Prefix: prefix,
+          Delete: {
+            Objects: objects,
+            Quiet: true,
+          },
         }),
       );
-
-      const objects =
-        listedObjects.Contents?.map((item) => ({
-          Key: item.Key,
-        })) ?? [];
-
-      if (objects.length > 0) {
-        await r2.send(
-          new DeleteObjectsCommand({
-            Bucket: R2_BUCKET_NAME,
-            Delete: {
-              Objects: objects,
-              Quiet: true,
-            },
-          }),
-        );
-      }
-
-      await Story.deleteOne({
-        storyId,
-      });
-
-      return res.json({
-        success: true,
-        message: "Story deleted.",
-        storyId,
-        deletedR2Objects: objects.length,
-      });
-    } catch (error) {
-      next(error);
     }
-  },
-);
+
+    await Story.deleteOne({
+      storyId,
+    });
+
+    const localProcessedDirectory = path.join(processedDirectory, storyId);
+
+    if (fs.existsSync(localProcessedDirectory)) {
+      fs.rmSync(localProcessedDirectory, {
+        recursive: true,
+        force: true,
+      });
+    }
+
+    const uploadedFiles = fs.readdirSync(uploadDirectory);
+
+    for (const fileName of uploadedFiles) {
+      if (fileName.startsWith(storyId)) {
+        fs.rmSync(path.join(uploadDirectory, fileName), {
+          force: true,
+        });
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: "Story deleted.",
+      storyId,
+      deletedR2Objects: objects.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.get("/api/stories", async (req, res, next) => {
   try {
-    const stories = await Story.find({})
-      .sort({ createdAt: -1 })
-      .lean();
+    const stories = await Story.find({}).sort({ createdAt: -1 }).lean();
 
     const normalizedStories = stories.map((story) => ({
       ...story,
