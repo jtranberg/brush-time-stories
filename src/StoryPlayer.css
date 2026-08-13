@@ -1,0 +1,275 @@
+:root {
+  --player-bg: #fffaf0;
+  --player-card: #ffffff;
+  --player-ink: #1f2a44;
+  --player-muted: #6f7b8d;
+  --player-purple: #6d4bd6;
+  --player-purple-dark: #5334bf;
+  --player-soft: #efeaff;
+  --player-border: rgba(87, 69, 145, 0.12);
+}
+
+/* =========================================================
+   STORY PLAYER SHELL
+   ========================================================= */
+
+.story-player-shell {
+  min-height: 100vh;
+  padding: 34px 20px 70px;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(109, 75, 214, 0.08),
+      transparent 32%
+    ),
+    var(--player-bg);
+  color: var(--player-ink);
+}
+
+.story-player-wrap {
+  width: min(980px, 100%);
+  margin: 0 auto;
+}
+
+/* =========================================================
+   BACK LINK
+   ========================================================= */
+
+.story-player-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-bottom: 28px;
+
+  color: var(--player-ink);
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.story-player-back:hover {
+  color: var(--player-purple);
+}
+
+/* =========================================================
+   PLAYER CARD
+   ========================================================= */
+
+.story-player-card {
+  overflow: hidden;
+
+  border: 1px solid var(--player-border);
+  border-radius: 34px;
+  background: var(--player-card);
+
+  box-shadow:
+    0 28px 70px rgba(53, 42, 95, 0.12);
+}
+
+/* =========================================================
+   STORY IMAGE
+   ========================================================= */
+
+.story-player-image-wrap {
+  padding: 24px 24px 0;
+}
+
+.story-player-image {
+  display: block;
+
+  width: 100%;
+  max-height: 720px;
+
+  object-fit: contain;
+
+  border-radius: 24px;
+  background: #f6f3ff;
+}
+
+/* =========================================================
+   STORY META
+   ========================================================= */
+
+.story-player-content {
+  padding: 28px 32px 34px;
+}
+
+.story-player-eyebrow {
+  margin: 0 0 10px;
+
+  color: var(--player-purple);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.story-player-title {
+  margin: 0;
+
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.story-player-page-count {
+  margin: 16px 0 0;
+
+  color: var(--player-muted);
+  font-size: 0.95rem;
+}
+
+/* =========================================================
+   PROGRESS
+   ========================================================= */
+
+.story-player-progress {
+  margin-top: 34px;
+}
+
+.story-player-track {
+  height: 10px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+  background: #ece8f7;
+}
+
+.story-player-fill {
+  height: 100%;
+
+  border-radius: inherit;
+  background: var(--player-purple);
+
+  transition: width 200ms ease;
+}
+
+.story-player-times {
+  margin-top: 8px;
+
+  display: flex;
+  justify-content: space-between;
+
+  color: var(--player-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* =========================================================
+   CONTROLS
+   ========================================================= */
+
+.story-player-controls {
+  margin-top: 26px;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.story-player-button {
+  min-height: 46px;
+  padding: 0 20px;
+
+  border: 0;
+  border-radius: 999px;
+
+  font: inherit;
+  font-weight: 900;
+
+  cursor: pointer;
+
+  transition:
+    transform 140ms ease,
+    background 140ms ease,
+    opacity 140ms ease;
+}
+
+.story-player-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.story-player-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.story-player-button-primary {
+  background: var(--player-purple);
+  color: white;
+}
+
+.story-player-button-primary:hover:not(:disabled) {
+  background: var(--player-purple-dark);
+}
+
+.story-player-button-secondary {
+  background: var(--player-soft);
+  color: var(--player-ink);
+}
+
+.story-player-button-secondary:hover:not(:disabled) {
+  background: #e4dcff;
+}
+
+/* =========================================================
+   STATUS / FALLBACK STATES
+   ========================================================= */
+
+.story-player-status {
+  width: min(760px, calc(100% - 40px));
+  margin: 100px auto;
+
+  padding: 50px 30px;
+
+  border: 1px solid var(--player-border);
+  border-radius: 30px;
+
+  background: white;
+  text-align: center;
+
+  box-shadow:
+    0 24px 60px rgba(53, 42, 95, 0.1);
+}
+
+.story-player-status h1 {
+  margin: 0 0 12px;
+}
+
+.story-player-status p {
+  margin: 0;
+
+  color: var(--player-muted);
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .story-player-shell {
+    padding: 20px 12px 50px;
+  }
+
+  .story-player-image-wrap {
+    padding: 14px 14px 0;
+  }
+
+  .story-player-content {
+    padding: 22px 18px 26px;
+  }
+
+  .story-player-title {
+    font-size: 2.5rem;
+  }
+
+  .story-player-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .story-player-button {
+    width: 100%;
+  }
+}
