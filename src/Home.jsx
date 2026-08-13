@@ -70,9 +70,9 @@ function openStory(story) {
         <div className="home-nav-actions">
           <a href="#stories">Story Library</a>
 
-          <a className="home-nav-button" href="#stories">
+          {/* <a className="home-nav-button" href="#stories">
             Start Story Time
-          </a>
+          </a> */}
           <a href="/admin">
     Admin
   </a>
@@ -94,9 +94,9 @@ function openStory(story) {
           </p>
 
           <div className="home-hero-actions">
-            <a className="home-primary-button" href="#stories">
+            {/* <a className="home-primary-button" href="#stories">
               ▶ Start Story Time
-            </a>
+            </a> */}
 
             <span className="home-time-note">About 3 minutes per story</span>
           </div>
