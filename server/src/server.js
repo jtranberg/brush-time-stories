@@ -23,6 +23,9 @@ import {
 
 import { r2, R2_BUCKET_NAME } from "./services/r2Client.js";
 
+import adminAuthRoutes from "./routes/adminAuthRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+
 const app = express();
 const PORT = process.env.PORT || 5050;
 
@@ -90,6 +93,8 @@ app.use(
 app.use(express.json());
 
 app.use("/processed", express.static(processedDirectory));
+app.use("/api/admin/auth", adminAuthRoutes);
+app.use("/api/auth", authRoutes);
 
 /* =========================================================
    MULTER STORAGE
