@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
+import { getCurrentUser, userLogout } from "./utils/userAuth";
 import "./Home.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5050";
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:5050";
 
 function getAssetUrl(assetPath) {
   if (!assetPath) {
@@ -18,6 +22,45 @@ function getAssetUrl(assetPath) {
 function Home() {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [user, setUser] = useState(null);
+  const [checkingUser, setCheckingUser] = useState(true);
+
+  /* =========================================================
+     LOAD USER SESSION
+     ========================================================= */
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadUser() {
+      try {
+        const currentUser = await getCurrentUser();
+
+        if (!cancelled) {
+          setUser(currentUser);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Unable to load user session:", error);
+        }
+      } finally {
+        if (!cancelled) {
+          setCheckingUser(false);
+        }
+      }
+    }
+
+    loadUser();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /* =========================================================
+     LOAD STORY LIBRARY
+     ========================================================= */
 
   useEffect(() => {
     let cancelled = false;
@@ -36,7 +79,9 @@ function Home() {
         }
       })
       .catch((error) => {
-        console.error("Unable to load BrushTime stories:", error);
+        if (!cancelled) {
+          console.error("Unable to load BrushTime stories:", error);
+        }
       })
       .finally(() => {
         if (!cancelled) {
@@ -49,17 +94,32 @@ function Home() {
     };
   }, []);
 
-function openStory(story) {
-  window.location.assign(
-    `/story/${encodeURIComponent(story.id)}`,
-  );
-}
+  /* =========================================================
+     USER CONTROLS
+     ========================================================= */
+
+  function handleLogout() {
+    userLogout();
+    window.location.replace("/login");
+  }
+
+  function openStory(story) {
+    window.location.assign(`/story/${encodeURIComponent(story.id)}`);
+  }
+
+  /* =========================================================
+     HOME
+     ========================================================= */
 
   return (
     <main className="home-shell">
+      {/* =====================================================
+          NAVIGATION
+          ===================================================== */}
+
       <header className="home-nav">
         <a className="home-brand" href="/">
-          <span className="home-brand-icon">🪥</span>
+          <span className="home-brand-icon">BT</span>
 
           <span>
             BrushTime
@@ -70,14 +130,39 @@ function openStory(story) {
         <div className="home-nav-actions">
           <a href="#stories">Story Library</a>
 
-          {/* <a className="home-nav-button" href="#stories">
-            Start Story Time
-          </a> */}
-          <a href="/admin">
-    Admin
-  </a>
+          {!checkingUser && !user && (
+            <>
+              <a href="/login">Login</a>
+
+              <a className="home-nav-button" href="/register">
+                Create Account
+              </a>
+            </>
+          )}
+
+          {!checkingUser && user && (
+            <>
+              <span className="home-user-email">{user.email}</span>
+
+              {/* <a href="/account">Account</a> */}
+
+              <button
+                className="home-logout-button"
+                type="button"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </>
+          )}
+
+          <a href="/admin">Admin</a>
         </div>
       </header>
+
+      {/* =====================================================
+          HERO INTRODUCTION
+          ===================================================== */}
 
       <section className="home-hero">
         <div className="home-hero-copy">
@@ -94,10 +179,6 @@ function openStory(story) {
           </p>
 
           <div className="home-hero-actions">
-            {/* <a className="home-primary-button" href="#stories">
-              ▶ Start Story Time
-            </a> */}
-
             <span className="home-time-note">About 3 minutes per story</span>
           </div>
         </div>
@@ -107,20 +188,62 @@ function openStory(story) {
           <div className="hero-glow hero-glow-two" />
 
           <div className="hero-book">
-            <div className="hero-book-page hero-book-left">✨</div>
+            <div className="hero-book-page hero-book-left">&#10024;</div>
 
-            <div className="hero-book-page hero-book-right">🌙</div>
+            <div className="hero-book-page hero-book-right">&#127769;</div>
           </div>
 
-          <div className="hero-toothbrush">🪥</div>
+          <div className="hero-toothbrush">&#129701;</div>
 
-          <div className="hero-bubble bubble-one">✦</div>
+          <div className="hero-bubble bubble-one">&#10022;</div>
 
-          <div className="hero-bubble bubble-two">✧</div>
+          <div className="hero-bubble bubble-two">&#10023;</div>
 
-          <div className="hero-bubble bubble-three">✦</div>
+          <div className="hero-bubble bubble-three">&#10022;</div>
         </div>
       </section>
+
+      {/* =====================================================
+          BRUSHTIME INSTRUCTIONS
+          Explain the routine before presenting the stories.
+          ===================================================== */}
+
+      <section className="home-routine">
+        <p className="home-eyebrow">One little routine</p>
+
+        <h2>Three minutes. One healthy habit.</h2>
+
+        <div className="home-routine-grid">
+          <div>
+            <span>&#129701;</span>
+
+            <strong>Brush</strong>
+
+            <p>Grab the toothbrush and get ready.</p>
+          </div>
+
+          <div>
+            <span>&#128214;</span>
+
+            <strong>Listen</strong>
+
+            <p>Follow a short story from start to finish.</p>
+          </div>
+
+          <div>
+            <span>&#10024;</span>
+
+            <strong>Smile</strong>
+
+            <p>Finish with a sparkling little victory.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          STORY LIBRARY
+          Keep stories as the final main action on the page.
+          ===================================================== */}
 
       <section className="home-stories" id="stories">
         <div className="home-section-heading">
@@ -139,7 +262,7 @@ function openStory(story) {
 
         {!loading && stories.length === 0 && (
           <div className="home-empty-state">
-            <span>📖</span>
+            <span>BrushTime Stories</span>
 
             <h3>New stories are coming.</h3>
 
@@ -182,7 +305,7 @@ function openStory(story) {
                       type="button"
                       onClick={() => openStory(story)}
                     >
-                      ▶ Play Story
+                      &#9654; Play Story
                     </button>
                   </div>
                 </article>
@@ -192,40 +315,51 @@ function openStory(story) {
         )}
       </section>
 
-      <section className="home-routine">
-        <p className="home-eyebrow">One little routine</p>
+      {/* =====================================================
+          FOOTER
+          ===================================================== */}
 
-        <h2>Three minutes. One healthy habit.</h2>
+      {/* =====================================================
+    FOOTER
+    ===================================================== */}
 
-        <div className="home-routine-grid">
-          <div>
-            <span>🪥</span>
-            <strong>Brush</strong>
-            <p>Grab the toothbrush and get ready.</p>
-          </div>
+      {/* =====================================================
+    FOOTER
+    ===================================================== */}
 
-          <div>
-            <span>📖</span>
-            <strong>Listen</strong>
-            <p>Follow a short story from start to finish.</p>
-          </div>
+<footer className="home-footer">
+  <div className="home-footer-brand">
+    <strong>BrushTime Stories</strong>
 
-          <div>
-            <span>✨</span>
-            <strong>Smile</strong>
-            <p>Finish with a sparkling little victory.</p>
-          </div>
-        </div>
-      </section>
+    <span>Brush. Listen. Smile.</span>
+  </div>
 
-      <footer className="home-footer">
-        <div>
-          <strong>BrushTime Stories</strong>
-          <span>Brush. Listen. Smile.</span>
-        </div>
+  <div className="home-footer-message">
+    <p>
+      Three-minute stories designed around one healthy little habit.
+    </p>
 
-        <p>Story time designed around one healthy little habit.</p>
-      </footer>
+    <span>
+      &copy; {new Date().getFullYear()} BrushTime Stories
+    </span>
+  </div>
+
+  <div className="home-footer-credit">
+    <span>
+      Stories by <strong>Robert Haugen</strong>
+    </span>
+
+    <span>Designed and developed by App Intelligence</span>
+
+    <a
+      href="https://appintelligence.ca"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      appintelligence.ca
+    </a>
+  </div>
+</footer>
     </main>
   );
 }

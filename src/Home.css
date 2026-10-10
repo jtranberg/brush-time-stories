@@ -585,3 +585,29 @@ body {
     flex-direction: column;
   }
 }
+.home-user-email {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #3e6475;
+}
+
+.home-logout-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+
+  font: inherit;
+  font-weight: 700;
+  color: #2c7897;
+
+  cursor: pointer;
+}
+
+.home-logout-button:hover {
+  text-decoration: underline;
+}
