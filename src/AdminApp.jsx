@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import StoryUpload from "./components/StoryUpload";
+import AdminLogin from "./pages/AdminLogin";
+import { adminLogout, getAdminToken, getCurrentAdmin } from "./utils/adminAuth";
 import "./App.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5050";
@@ -28,10 +30,13 @@ function getAssetUrl(assetPath) {
 }
 
 /* =========================================================
-   APP
+   ADMIN APP
    ========================================================= */
 
-function App() {
+function AdminApp() {
+  const [admin, setAdmin] = useState(null);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
+
   const [stories, setStories] = useState([]);
   const [loadingStories, setLoadingStories] = useState(true);
 
@@ -45,8 +50,62 @@ function App() {
   const voicesRef = useRef([]);
 
   const currentPage = selectedStory?.pages?.[currentPageIndex] || null;
-
   const storyDuration = selectedStory?.durationSeconds || 180;
+
+  /* =========================================================
+     ADMIN SESSION
+     ========================================================= */
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkAdmin() {
+      try {
+        if (!getAdminToken()) {
+          if (!cancelled) {
+            setCheckingAdmin(false);
+          }
+
+          return;
+        }
+
+        const currentAdmin = await getCurrentAdmin();
+
+        if (!cancelled) {
+          setAdmin(currentAdmin);
+        }
+      } catch (error) {
+        console.error("Unable to verify admin session:", error);
+      } finally {
+        if (!cancelled) {
+          setCheckingAdmin(false);
+        }
+      }
+    }
+
+    checkAdmin();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function handleAdminLogout() {
+    adminLogout();
+
+    window.speechSynthesis.cancel();
+
+    setAdmin(null);
+    setSelectedStory(null);
+    setCurrentPageIndex(0);
+    setElapsedSeconds(0);
+    setIsPlaying(false);
+  }
+
+  function handleBackToHome() {
+    window.speechSynthesis.cancel();
+    window.location.assign("/");
+  }
 
   /* =========================================================
      LOAD STORY LIBRARY
@@ -59,7 +118,6 @@ function App() {
       }
 
       const response = await fetch(`${API_URL}/api/stories`);
-
       const data = await response.json();
 
       if (!response.ok) {
@@ -73,6 +131,10 @@ function App() {
       setLoadingStories(false);
     }
   }, []);
+
+  /* =========================================================
+     LOAD SPEECH VOICES
+     ========================================================= */
 
   useEffect(() => {
     const loadVoices = () => {
@@ -88,13 +150,10 @@ function App() {
     };
   }, []);
 
-  /*
-   * Initial story load.
-   *
-   * We intentionally perform the fetch asynchronously here
-   * instead of immediately calling loadStories(), avoiding the
-   * React set-state-in-effect lint warning.
-   */
+  /* =========================================================
+     INITIAL STORY LOAD
+     ========================================================= */
+
   useEffect(() => {
     let cancelled = false;
 
@@ -266,7 +325,6 @@ function App() {
 
   function handlePlay() {
     window.speechSynthesis.cancel();
-
     speakPage(currentPageIndex);
   }
 
@@ -280,8 +338,8 @@ function App() {
       return;
     }
 
+    window.speechSynthesis.cancel();
     setIsPlaying(false);
-
     setCurrentPageIndex((current) => current - 1);
   }
 
@@ -295,9 +353,7 @@ function App() {
     }
 
     window.speechSynthesis.cancel();
-
     setIsPlaying(false);
-
     setCurrentPageIndex((current) => current + 1);
   }
 
@@ -321,6 +377,10 @@ function App() {
     setElapsedSeconds(0);
     setIsPlaying(false);
   }
+
+  /* =========================================================
+     DELETE STORY
+     ========================================================= */
 
   async function handleDeleteStory(story) {
     const confirmed = window.confirm(`Delete "${story.title}"?`);
@@ -351,6 +411,28 @@ function App() {
   }
 
   /* =========================================================
+     AUTH GATE
+     ========================================================= */
+
+  if (checkingAdmin) {
+    return (
+      <main className="app-shell">
+        <p>Checking publisher session...</p>
+      </main>
+    );
+  }
+
+  if (!admin) {
+    return (
+      <AdminLogin
+        onLogin={(loggedInAdmin) => {
+          setAdmin(loggedInAdmin);
+        }}
+      />
+    );
+  }
+
+  /* =========================================================
      STORY PLAYER
      ========================================================= */
 
@@ -362,8 +444,28 @@ function App() {
     return (
       <main className="app-shell">
         <section className="player">
+          <div className="admin-toolbar">
+            <span>{admin.email}</span>
+
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={handleBackToHome}
+            >
+              â† Back to Home
+            </button>
+
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={handleAdminLogout}
+            >
+              Logout
+            </button>
+          </div>
+
           <button className="back-button" type="button" onClick={handleBack}>
-            ← Back to Stories
+            â† Back to Stories
           </button>
 
           <div className="story-stage">
@@ -396,7 +498,6 @@ function App() {
 
               <div className="progress-time">
                 <span>{formatTime(elapsedSeconds)}</span>
-
                 <span>{formatTime(storyDuration)}</span>
               </div>
             </div>
@@ -463,12 +564,35 @@ function App() {
   }
 
   /* =========================================================
-     STORY LIBRARY
+     ADMIN STORY LIBRARY
      ========================================================= */
 
   return (
     <main className="app-shell">
       <section className="hero-section">
+        <div className="admin-toolbar">
+          <div className="admin-toolbar-copy">
+            <span className="admin-toolbar-label">Publisher</span>
+            <span className="admin-toolbar-email">{admin.email}</span>
+          </div>
+
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={handleBackToHome}
+          >
+            Back to Home
+          </button>
+
+          <button
+            className="admin-logout-button"
+            type="button"
+            onClick={handleAdminLogout}
+          >
+            Logout
+          </button>
+        </div>
+
         <div className="hero-copy">
           <p className="eyebrow">Three-minute stories for brushing time</p>
 
@@ -530,7 +654,7 @@ function App() {
                   </button>
 
                   <button
-                    className="secondary-button"
+                    className="secondary-button delete-story-button"
                     type="button"
                     onClick={() => handleDeleteStory(story)}
                   >
@@ -545,11 +669,10 @@ function App() {
 
       <footer className="site-footer">
         <strong>BrushTime Stories</strong>
-
         <span>Brush. Listen. Smile.</span>
       </footer>
     </main>
   );
 }
 
-export default App;
+export default AdminApp;
